@@ -1,38 +1,56 @@
 import sounddevice as sd
 import wave
+import time
+import os
 from datetime import datetime
+from notifier import TEST_INTERVAL
 
-class VoiceRecorder:
-    def __init__(self, duration=30, sample_rate=44100, channels=1):
-        self.duration = duration
-        self.sample_rate = sample_rate
-        self.channels = channels
-    
-    def record(self):
-        print("🎤 Recording for", self.duration, "seconds...")
+TEST_DURATION = 10
 
-        # Record Audio
-        audio_data = sd.rec(int(self.duration * self.sample_rate), 
-                            samplerate=self.sample_rate, 
-                            channels=self.channels, 
-                            dtype='int16')
+class Recorder:
+    def __init__(self, duration=30, freq=44100, save_dir="logs"):
+        self.duration = duration  # Recording duration in seconds
+        self.freq = freq  # Sampling frequency
+        self.running = True  # Allows stopping later
+        self.save_dir = save_dir
 
+        # Ensure logs directory exists
+        if not os.path.exists(self.save_dir):
+            os.makedirs(self.save_dir)
+
+    def record_audio(self):
+        """Records audio and saves it with a timestamp."""
+        print("🔴 Recording started...")
+        recording = sd.rec(int(self.duration * self.freq), samplerate=self.freq, channels=2, dtype='int16')
         sd.wait()
-        print("✅ Recording finished!")
 
-        # Save to file
-        filename = datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + ".wav"
-        self.save_audio(filename, audio_data)
-
-    def save_audio(self, filename, audio_data):
+        # Save with timestamp
+        filename = os.path.join(self.save_dir, datetime.now().strftime('%Y-%m-%d_%H-%M-%S') + ".wav")
         with wave.open(filename, 'wb') as wf:
-            wf.setnchannels(self.channels)
-            wf.setsampwidth(2)  # 2 bytes per sample (16-bit PCM)
-            wf.setframerate(self.sample_rate)
-            wf.writeframes(audio_data.tobytes())
+            wf.setnchannels(2)
+            wf.setsampwidth(2)
+            wf.setframerate(self.freq)
+            wf.writeframes(recording.tobytes())
 
-        print(f"💾 Audio saved as {filename}")
+        print(f"✅ Recording saved: {filename}")
 
-if __name__=="__main__":
-    recorder = VoiceRecorder()
-    recorder.record()
+    def start(self, event, interval=3600):
+        """Runs the recorder in a loop, capturing audio at set intervals."""
+        print(f"🎤 Recorder started, capturing every {interval} seconds.")
+        try:
+            while self.running:
+                event.wait()
+                self.record_audio()
+                # print(f"⏳ Sleeping for {interval} seconds before next recording...")
+                # time.sleep(interval)
+                event.clear()
+        except KeyboardInterrupt:
+            print("\n🛑 Recording stopped by user.")
+
+    def stop(self):
+        """Stops recording loop."""
+        self.running = False
+
+if __name__ == "__main__":
+    recorder = Recorder(duration=TEST_DURATION)
+    recorder.start(interval=TEST_INTERVAL)

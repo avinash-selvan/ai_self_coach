@@ -1,35 +1,30 @@
-from recorder import VoiceRecorder
-from notifier import Notifier
 import threading
-import time
+from notifier import Notifier,TEST_INTERVAL
+from recorder import Recorder, TEST_DURATION
 
-RECORD_DURATION = 10
-NOTIFICATION_TITLE = "Record Alert!⚠️"
-NOTIFICATION_MESSAGE = "Recording Starts in 5 seconds, be ready"
-SLEEP_TIME = 10
-DELAY_BEFORE_RECORDING = 5
+def run_notifier(event):
+    notifier = Notifier(sleep_time=TEST_INTERVAL)
+    notifier.start(event=event)
 
-
-
-class AI_Coach:
-    def __init__(self,sleep_time=3600, delay_before_recording=5):
-        self.notifier = Notifier(sleep_time=sleep_time, message=NOTIFICATION_MESSAGE, title=NOTIFICATION_TITLE)
-        self.recorder = VoiceRecorder(duration=RECORD_DURATION)
-        self.delay_before_recording = delay_before_recording
-
-    def run_cycle(self):
-        """RUNS A SINGLE CYCLE: SHOWS NOTIFICATION, WAITS, THEN RECORDS."""
-        self.notifier.show_notification()
-        time.sleep(self.delay_before_recording)
-        self.recorder.record()
-    
-    def start(self):
-        """Runs the AI coach continuously."""
-        while True:
-            thread = threading.Thread(target=self.run_cycle)
-            thread.start()
-            time.sleep(self.notifier.sleep_time)  # Wait for next interval
+def run_recorder(event):
+    recorder = Recorder(duration=TEST_DURATION)  # 30 sec voice log every hour
+    recorder.start(event=event, interval=TEST_INTERVAL)  # Match notification interval
 
 if __name__ == "__main__":
-    coach = AI_Coach(sleep_time=SLEEP_TIME, delay_before_recording=DELAY_BEFORE_RECORDING)  # Adjust delay as needed
-    coach.start()
+
+    event = threading.Event()
+
+    # Create threads for both
+    notifier_thread = threading.Thread(target=run_notifier, args=(event,))
+    recorder_thread = threading.Thread(target=run_recorder, args=(event,))
+
+    # Start both threads
+    notifier_thread.start()
+    recorder_thread.start()
+
+    try:
+        # Keep running
+        notifier_thread.join()
+        recorder_thread.join()
+    except KeyboardInterrupt:
+        print("\nStopping gracefully...")
