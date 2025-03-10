@@ -1,36 +1,38 @@
 import sounddevice as sd
 import wave
-import time
 from datetime import datetime
 
-# Sampling rate 
-SAMPLE_RATE = 44100
-DURATION = 30
-CHANNELS = 1
-
-def record_audio():
-    print("🎤Recording for 30 seconds")
-
-    audio_data = sd.rec(
-        int(DURATION*SAMPLE_RATE),
-        samplerate= SAMPLE_RATE,
-        channels=CHANNELS,
-        dtype='int16'
-    )
-
-    sd.wait()
-
-    print("✅ Recording complete")
-
-    filename = datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + ".wav"
-
-    with wave.open(filename, 'wb') as wf:
-        wf.setnchannels(CHANNELS)
-        wf.setsampwidth(2)
-        wf.setframerate(SAMPLE_RATE)
-        wf.writeframes(audio_data.tobytes())
+class VoiceRecorder:
+    def __init__(self, duration=30, sample_rate=44100, channels=1):
+        self.duration = duration
+        self.sample_rate = sample_rate
+        self.channels = channels
     
-    print(f"💾 Audio saved as {filename}")
+    def record(self):
+        print("🎤 Recording for", self.duration, "seconds...")
 
-if __name__ == "__main__":
-    record_audio()
+        # Record Audio
+        audio_data = sd.rec(int(self.duration * self.sample_rate), 
+                            samplerate=self.sample_rate, 
+                            channels=self.channels, 
+                            dtype='int16')
+
+        sd.wait()
+        print("✅ Recording finished!")
+
+        # Save to file
+        filename = datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + ".wav"
+        self.save_audio(filename, audio_data)
+
+    def save_audio(self, filename, audio_data):
+        with wave.open(filename, 'wb') as wf:
+            wf.setnchannels(self.channels)
+            wf.setsampwidth(2)  # 2 bytes per sample (16-bit PCM)
+            wf.setframerate(self.sample_rate)
+            wf.writeframes(audio_data.tobytes())
+
+        print(f"💾 Audio saved as {filename}")
+
+if __name__=="__main__":
+    recorder = VoiceRecorder()
+    recorder.record()

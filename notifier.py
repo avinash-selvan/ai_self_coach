@@ -1,21 +1,25 @@
 import time
 from plyer import notification
 
-SLEEP = 3600  # Default to 1 hour
+class Notifier:
+    def __init__(self, sleep_time=3600, title="Future Avinash here", message="Please study bro."):
+        self.sleep_time = sleep_time
+        self.title = title
+        self.message = message
 
-def show_notification():
-    notification.notify(
-        title="Future Avinash here",
-        message="Please study bro.",
-        timeout=2,
-        app_name="Ai_coach"
-    )
+    def show_notification(self):
+        notification.notify(
+            title=self.title,
+            message=self.message,
+            timeout=2,
+            app_name="Ai_coach"
+        )
 
-def schedule_notification(sleep_time=None):
-    global SLEEP  
-    while True:
-        show_notification()
-        time.sleep(sleep_time if sleep_time else SLEEP)  # Use passed value or global SLEEP
+    def start(self):
+        while True:
+            self.show_notification()
+            time.sleep(self.sleep_time)
 
 if __name__ == "__main__":
-    schedule_notification()  # Uses global SLEEP, but AI can update it dynamically
+    notifier = Notifier()  # Default: 1-hour interval
+    notifier.start()
