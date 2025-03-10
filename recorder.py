@@ -1,15 +1,36 @@
 import sounddevice as sd
-import wavio as wv
+import wave
+import time
+from datetime import datetime
 
-# Sampling frequency
-freq = 44100
+# Sampling rate 
+SAMPLE_RATE = 44100
+DURATION = 30
+CHANNELS = 1
 
-# Recording duration
-duration = 5
+def record_audio():
+    print("🎤Recording for 30 seconds")
 
-recording = sd.rec(int(duration * freq),
-                   samplerate=freq, channels=2)
+    audio_data = sd.rec(
+        int(DURATION*SAMPLE_RATE),
+        samplerate= SAMPLE_RATE,
+        channels=CHANNELS,
+        dtype='int16'
+    )
 
-sd.wait()
+    sd.wait()
 
-wv.write("recording1.wav", recording, freq, sampwidth=2)
+    print("✅ Recording complete")
+
+    filename = datetime.now().strftime("%Y-%m-%d_%H-%M-%S") + ".wav"
+
+    with wave.open(filename, 'wb') as wf:
+        wf.setnchannels(CHANNELS)
+        wf.setsampwidth(2)
+        wf.setframerate(SAMPLE_RATE)
+        wf.writeframes(audio_data.tobytes())
+    
+    print(f"💾 Audio saved as {filename}")
+
+if __name__ == "__main__":
+    record_audio()
