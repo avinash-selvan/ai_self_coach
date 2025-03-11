@@ -4,6 +4,7 @@ import time
 import os
 from datetime import datetime
 from notifier import TEST_INTERVAL
+from transcriber import Transcriber  # Import transcriber
 
 TEST_DURATION = 10
 
@@ -13,6 +14,7 @@ class Recorder:
         self.freq = freq  # Sampling frequency
         self.running = True  # Allows stopping later
         self.save_dir = save_dir
+        self.transcriber = Transcriber()
 
         # Ensure logs directory exists
         if not os.path.exists(self.save_dir):
@@ -41,6 +43,7 @@ class Recorder:
             while self.running:
                 event.wait()
                 self.record_audio()
+                self.transcriber.process_latest_audio()
                 # print(f"⏳ Sleeping for {interval} seconds before next recording...")
                 # time.sleep(interval)
                 event.clear()
