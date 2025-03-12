@@ -2,10 +2,13 @@ import os
 import whisper
 from datetime import datetime
 
+TRANSCRIPT_FOLDER = "logs/Text"
+
 class Transcriber:
-    def __init__(self, audio_folder="logs/", model_size="base"):
+    def __init__(self, audio_folder="logs/audio/", model_size="base", transcript_folder=TRANSCRIPT_FOLDER):
         """Initializes the Whisper model."""
         self.audio_folder = audio_folder
+        self.transcript_folder = transcript_folder
         self.model = whisper.load_model(model_size, device="cpu")  # Load Whisper model
 
     def get_latest_audio(self):
@@ -21,7 +24,7 @@ class Transcriber:
         result = self.model.transcribe(audio_path)
         return result["text"]
 
-    def save_transcription(self, text, output_folder="logs/"):
+    def save_transcription(self, text, output_folder="logs/Text/"):
         """Saves the transcribed text to a file."""
         filename = f"{output_folder}transcription_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.txt"
         with open(filename, "w", encoding="utf-8") as file:
