@@ -2,12 +2,9 @@ import time
 from plyer import notification
 from analyzer import Analyzer
 
-INTERVAL = 30
-
 class AIIntervention:
-    def __init__(self, check_interval=INTERVAL):  # Check every hour
+    def __init__(self):  # Check every hour
         self.analyzer = Analyzer()
-        self.check_interval = check_interval
 
     def send_notification(self, message):
         """Sends a system notification."""
@@ -39,11 +36,12 @@ class AIIntervention:
         if "stress" in keywords or "tired" in keywords:
             self.send_notification("You seem stressed. Try a 5-minute break. ☕")
 
-    def run(self):
-        """Continuously checks transcriptions and intervenes if needed."""
+    def run(self, ai_event):
+        """Continuously waits for new transcriptions and intervenes if needed."""
         while True:
+            ai_event.wait()  # Wait until a new transcription is ready
             self.analyze_and_intervene()
-            time.sleep(self.check_interval)  # Wait before checking again
+            ai_event.clear()  # Reset event for the next cycle
 
 # Run AI Interventions
 if __name__ == "__main__":

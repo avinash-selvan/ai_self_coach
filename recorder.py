@@ -5,6 +5,7 @@ import os
 from datetime import datetime
 from notifier import TEST_INTERVAL
 from transcriber import Transcriber  # Import transcriber
+from analyzer import Analyzer
 
 TEST_DURATION = 10
 
@@ -15,6 +16,7 @@ class Recorder:
         self.running = True  # Allows stopping later
         self.save_dir = save_dir
         self.transcriber = Transcriber()
+        self.analyzer = Analyzer()
 
         # Ensure logs directory exists
         if not os.path.exists(self.save_dir):
@@ -36,23 +38,26 @@ class Recorder:
 
         print(f"✅ Recording saved: {filename}")
 
-    def start(self, event, interval=3600):
-        """Runs the recorder in a loop, capturing audio at set intervals."""
-        print(f"🎤 Recorder started, capturing every {interval} seconds.")
+    def start(self, record_event, ai_event):
+        """Runs the recorder in a loop, capturing audio when the notifier goes off"""
         try:
             while self.running:
-                event.wait()
-                self.record_audio()
-                self.transcriber.process_latest_audio()
-                # print(f"⏳ Sleeping for {interval} seconds before next recording...")
-                # time.sleep(interval)
-                event.clear()
+                record_event.wait()  # Wait for notifier signal
+                
+                self.record_audio()  # Record audio
+                self.transcriber.process_latest_audio()  # Transcribe it
+                
+                time.sleep(2)  # 🕒 Allow time for transcription to be saved
+                
+                self.analyzer.analyze_latest_transcription()  # ✅ Analyze text
+                
+                time.sleep(1)  # 🕒 Allow processing before intervention
+                
+                ai_event.set()  # ✅ Signal AI intervention
+                
+                record_event.clear()  # Reset event for the next cycle
         except KeyboardInterrupt:
             print("\n🛑 Recording stopped by user.")
-
-    def stop(self):
-        """Stops recording loop."""
-        self.running = False
 
 if __name__ == "__main__":
     recorder = Recorder(duration=TEST_DURATION)
