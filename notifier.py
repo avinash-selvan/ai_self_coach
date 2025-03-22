@@ -2,7 +2,7 @@ import time
 from plyer import notification
 import schedule
 
-TEST_INTERVAL = 20
+TEST_INTERVAL = 300
 
 class Notifier:
     def __init__(self, sleep_time=3600, title="Recording Alert", message="Recording now......"):

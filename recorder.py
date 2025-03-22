@@ -7,7 +7,7 @@ from notifier import TEST_INTERVAL
 from transcriber import Transcriber  # Import transcriber
 from analyzer import Analyzer
 
-TEST_DURATION = 10
+TEST_DURATION = 30
 
 class Recorder:
     def __init__(self, duration=30, freq=44100, save_dir="logs"):
